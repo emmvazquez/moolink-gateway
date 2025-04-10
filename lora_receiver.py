@@ -1,5 +1,6 @@
 # lora_receiver.py
-
+###
+'''
 import LoRa  # Usa la librería LoRa compatible que manejes
 import config
 
@@ -21,4 +22,19 @@ class LoRaReceiver:
         return None
 
     def close(self):
-        LoRa.end()
+        LoRa.end() '''
+
+import time
+
+class LoRaReceiver:
+    def __init__(self):
+        print("Simulador de recepción LoRa iniciado.")
+
+    def receive_packet(self):
+        # Simular un paquete cada 10 segundos
+        time.sleep(10)
+        simulated_packet = '{"gps_latitude":23.4567,"gps_longitude":-100.1234,"humedad":45.2,"temperatura":39.7,"ritmo_cardiaco":125,"acelerometro_x":0.01,"acelerometro_y":0.02,"acelerometro_z":0.99,"id_bovino":"BOV1234"}'
+        return simulated_packet
+
+    def close(self):
+        print("Simulador cerrado.")
