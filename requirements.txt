@@ -1,0 +1,5 @@
+spidev
+RPi.GPIO
+requests
+scikit-learn
+joblib
