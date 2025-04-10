@@ -5,6 +5,8 @@ from datetime import datetime
 
 # URL de tu servicio web
 url = "https://moolink.e-icus.net/api/localizacion/recibir"
+url = "https://moolink.e-icus.net/index.php/api/localizacion/recibir"
+
 
 # Datos fijos de tu dispositivo / bovino
 idBovino = 1
