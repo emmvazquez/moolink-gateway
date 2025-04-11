@@ -54,7 +54,7 @@ print("✅ Receptor LoRa iniciado en Raspberry Pi...")
 time.sleep(1)
 
 try:
-    lora.start()
+    lora.set_mode(MODE.RXCONT)
 except KeyboardInterrupt:
     print("⛔ Interrumpido por usuario.")
 finally:
