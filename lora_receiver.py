@@ -1,40 +1,61 @@
-# lora_receiver.py
-###
-'''
-import LoRa  # Usa la librería LoRa compatible que manejes
-import config
-
-class LoRaReceiver:
-    def __init__(self):
-        LoRa.begin(config.RF_FREQUENCY)
-        LoRa.setSpreadingFactor(config.LORA_SPREADING_FACTOR)
-        LoRa.setSignalBandwidth(config.LORA_BANDWIDTH)
-        LoRa.setCodingRate4(config.LORA_CODING_RATE)
-        LoRa.setSyncWord(config.LORA_SYNC_WORD)
-
-    def receive_packet(self):
-        packet_size = LoRa.parsePacket()
-        if packet_size:
-            packet = ""
-            while LoRa.available():
-                packet += chr(LoRa.read())
-            return packet
-        return None
-
-    def close(self):
-        LoRa.end() '''
-
 import time
+import spidev
+import RPi.GPIO as GPIO
+import json
+from SX127x.LoRa import LoRa
+from SX127x.board_config import BOARD
+from SX127x.constants import *
 
-class LoRaReceiver:
-    def __init__(self):
-        print("Simulador de recepción LoRa iniciado.")
+BOARD.setup()
 
-    def receive_packet(self):
-        # Simular un paquete cada 10 segundos
-        time.sleep(10)
-        simulated_packet = '{"gps_latitude":23.4567,"gps_longitude":-100.1234,"humedad":45.2,"temperatura":39.7,"ritmo_cardiaco":125,"acelerometro_x":0.01,"acelerometro_y":0.02,"acelerometro_z":0.99,"id_bovino":"BOV1234"}'
-        return simulated_packet
+class LoRaReceiver(LoRa):
+    def __init__(self, verbose=False):
+        super(LoRaReceiver, self).__init__(verbose)
+        self.set_mode(MODE.SLEEP)
+        self.set_dio_mapping([0] * 6)
 
-    def close(self):
-        print("Simulador cerrado.")
+    def on_rx_done(self):
+        print("\n📦 ¡Paquete recibido!")
+        self.clear_irq_flags(RxDone=1)
+        payload = self.read_payload(nocheck=True)
+        raw_data = bytes(payload).decode('utf-8', errors='ignore')
+        print(f"📝 Contenido crudo: {raw_data}")
+
+        # Intentamos interpretar como JSON
+        try:
+            data_json = json.loads(raw_data)
+            print("📖 JSON decodificado:")
+            print(json.dumps(data_json, indent=4))
+        except json.JSONDecodeError:
+            print("⚠️ Error: No se pudo decodificar como JSON.")
+
+        print(f"📶 RSSI: {self.get_rssi_value()} dBm")
+        print(f"📈 SNR: {self.get_pkt_snr_value()} dB")
+
+        self.set_mode(MODE.SLEEP)
+        self.reset_ptr_rx()
+        self.set_mode(MODE.RXCONT)
+
+lora = LoRaReceiver(verbose=False)
+
+# Configuraciones igual que el emisor
+lora.set_mode(MODE.STDBY)
+lora.set_freq(915.0)
+lora.set_spreading_factor(7)
+lora.set_bandwidth(BW.BW125)
+lora.set_coding_rate(CODING_RATE.CR4_5)
+lora.set_preamble(8)
+lora.set_crc(True)
+lora.set_iq_inversion(False)
+
+lora.set_rx_crc(True)
+
+print("✅ Receptor LoRa iniciado en Raspberry Pi...")
+time.sleep(1)
+
+try:
+    lora.start()
+except KeyboardInterrupt:
+    print("⛔ Interrumpido por usuario.")
+finally:
+    BOARD.teardown()
