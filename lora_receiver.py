@@ -44,6 +44,7 @@ lora.set_bw(BW.BW125)
 lora.set_coding_rate(CODING_RATE.CR4_5)
 lora.set_preamble(8)
 lora.set_rx_crc(True)
+lora.set_sync_word(0x34)
 
 print("✅ Receptor LoRa iniciado en Raspberry Pi...")
 time.sleep(1)
