@@ -38,6 +38,16 @@ class LoRaReceiver(LoRa):
 
 lora = LoRaReceiver(verbose=False)
 
+# 🔥 Agregar forzar a standby
+lora.set_mode(MODE.STDBY)
+time.sleep(0.1)
+
+# Ahora sí configuras:
+lora.set_freq(915.0)
+lora.set_spreading_factor(7)
+...
+
+
 # Configuraciones igual que el emisor
 lora.set_mode(MODE.STDBY)
 lora.set_freq(915.0)
