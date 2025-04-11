@@ -52,7 +52,8 @@ time.sleep(1)
 try:
     lora.set_mode(MODE.RXCONT)
     while True:
-        time.sleep(1)
+        lora.poll_irq()
+        time.sleep(0.1)
 except KeyboardInterrupt:
     print("⛔ Interrumpido por usuario.")
 finally:
