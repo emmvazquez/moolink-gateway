@@ -21,7 +21,6 @@ class LoRaReceiver(LoRa):
         raw_data = bytes(payload).decode('utf-8', errors='ignore')
         print(f"📝 Contenido crudo: {raw_data}")
 
-        # Intentamos interpretar como JSON
         try:
             data_json = json.loads(raw_data)
             print("📖 JSON decodificado:")
@@ -38,7 +37,6 @@ class LoRaReceiver(LoRa):
 
 lora = LoRaReceiver(verbose=False)
 
-# Configuraciones igual que el emisor
 lora.set_mode(MODE.STDBY)
 lora.set_freq(915.0)
 lora.set_spreading_factor(7)
@@ -47,14 +45,13 @@ lora.set_coding_rate(CODING_RATE.CR4_5)
 lora.set_preamble(8)
 lora.set_rx_crc(True)
 
-
-lora.set_rx_crc(True)
-
 print("✅ Receptor LoRa iniciado en Raspberry Pi...")
 time.sleep(1)
 
 try:
     lora.set_mode(MODE.RXCONT)
+    while True:
+        time.sleep(1)
 except KeyboardInterrupt:
     print("⛔ Interrumpido por usuario.")
 finally:
