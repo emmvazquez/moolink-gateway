@@ -18,9 +18,9 @@ lora = LoRaRSSI(verbose=False)
 # Configuración LoRa igual al emisor
 lora.set_mode(MODE.STDBY)
 lora.set_freq(915.0)                   # ✅ Frecuencia 915 MHz
-lora.set_spreading_factor(7)            # ✅ SF7
+lora.set_spreading_factor(12)            # ✅ SF7
 lora.set_bw(BW.BW125)                   # ✅ 125kHz
-lora.set_coding_rate(CODING_RATE.CR4_5) # ✅ CR 4/5
+lora.set_coding_rate(CODING_RATE.CR4_8) # ✅ CR 4/5
 lora.set_preamble(8)                    # ✅ Preamble length 8
 lora.set_rx_crc(True)                   # ✅ CRC activado
 
