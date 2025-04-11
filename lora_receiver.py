@@ -46,7 +46,7 @@ lora.set_bw(BW.BW125)
 lora.set_coding_rate(CODING_RATE.CR4_5)
 lora.set_preamble(8)
 lora.set_rx_crc(True)
-lora.set_iq_inversion(False)
+
 
 lora.set_rx_crc(True)
 
