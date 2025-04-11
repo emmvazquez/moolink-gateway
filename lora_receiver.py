@@ -52,9 +52,12 @@ time.sleep(1)
 try:
     lora.set_mode(MODE.RXCONT)
     while True:
-        lora.poll_irq()
+        irq_flags = lora.get_irq_flags()
+        if irq_flags.get('rx_done'):
+            lora.on_rx_done()
         time.sleep(0.1)
 except KeyboardInterrupt:
     print("⛔ Interrumpido por usuario.")
 finally:
     BOARD.teardown()
+
