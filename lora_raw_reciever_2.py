@@ -14,11 +14,17 @@ class RawLoRaReceiver(LoRa):
 
 lora = RawLoRaReceiver(verbose=False)
 
-# Configuración básica forzada
+# Configuración forzada completa
 print("\U0001F50C Forzando configuración LoRa en SX1278...")
 lora.set_mode(MODE.SLEEP)
 time.sleep(0.1)
 lora.set_freq(915.0)
+lora.set_bw(BW.BW125)
+lora.set_spreading_factor(7)
+lora.set_coding_rate(CODING_RATE.CR4_5)
+lora.set_preamble(8)
+lora.set_rx_crc(True)
+lora.write_register(REG.LORA.SYNC_WORD, 0x34)
 lora.reset_ptr_rx()
 lora.set_mode(MODE.RXCONT)
 
