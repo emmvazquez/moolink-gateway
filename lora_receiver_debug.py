@@ -15,7 +15,7 @@ lora = LoRaReceiver(verbose=False)
 
 lora.set_mode(MODE.STDBY)
 lora.set_freq(915.0)
-lora.set_spreading_factor(7)               # SF7
+lora.set_spreading_factor(8)               # SF7
 lora.set_bw(BW.BW125)                       # 125kHz
 lora.set_coding_rate(CODING_RATE.CR4_5)     # CR4/5
 lora.set_preamble(8)
