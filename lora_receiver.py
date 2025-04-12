@@ -6,8 +6,10 @@ from SX127x.LoRa import LoRa
 from SX127x.board_config import BOARD
 from SX127x.constants import *
 
+# 🚀 Configura la Raspberry Pi
 BOARD.setup()
 
+# 🚀 Define la clase personalizada
 class LoRaReceiver(LoRa):
     def __init__(self, verbose=False):
         super(LoRaReceiver, self).__init__(verbose)
@@ -21,6 +23,7 @@ class LoRaReceiver(LoRa):
         raw_data = bytes(payload).decode('utf-8', errors='ignore')
         print(f"📝 Contenido crudo: {raw_data}")
 
+        # Intentamos interpretar como JSON
         try:
             data_json = json.loads(raw_data)
             print("📖 JSON decodificado:")
@@ -31,33 +34,38 @@ class LoRaReceiver(LoRa):
         print(f"📶 RSSI: {self.get_rssi_value()} dBm")
         print(f"📈 SNR: {self.get_pkt_snr_value()} dB")
 
-        self.set_mode(MODE.SLEEP)
         self.reset_ptr_rx()
         self.set_mode(MODE.RXCONT)
 
+# 🚀 Instancia de la clase
 lora = LoRaReceiver(verbose=False)
 
+# 🚀 Configura parámetros de radio
 lora.set_mode(MODE.STDBY)
-lora.set_freq(915.0)
-lora.set_spreading_factor(7)
-lora.set_bw(BW.BW125)
-lora.set_coding_rate(CODING_RATE.CR4_5)
+lora.set_freq(915.0)                   # 915 MHz
+lora.set_spreading_factor(7)            # SF7 para coincidir
+lora.set_bw(BW.BW125)                   # 125 kHz
+lora.set_coding_rate(CODING_RATE.CR4_5) # CR 4/5 para coincidir
 lora.set_preamble(8)
 lora.set_rx_crc(True)
-lora.set_sync_word(0x34)
 
 print("✅ Receptor LoRa iniciado en Raspberry Pi...")
 time.sleep(1)
 
+# 🚀 Entrar en modo recepción
+lora.set_mode(MODE.RXCONT)
+print("🎯 Modo RXCONT activo. Esperando paquetes...\n")
+
+# 🚀 Loop principal
 try:
-    lora.set_mode(MODE.RXCONT)
     while True:
-        irq_flags = lora.get_irq_flags()
-        if irq_flags.get('rx_done'):
-            lora.on_rx_done()
-        time.sleep(0.1)
+        # Este loop mantiene el script corriendo
+        # Manda latido de vida cada 5 segundos
+        time.sleep(5)
+        print("💓 Latido: esperando paquetes...")
+
 except KeyboardInterrupt:
-    print("⛔ Interrumpido por usuario.")
+    print("\n⛔ Interrumpido por usuario.")
+
 finally:
     BOARD.teardown()
-
