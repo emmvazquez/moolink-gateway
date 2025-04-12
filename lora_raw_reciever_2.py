@@ -14,17 +14,23 @@ class RawLoRaReceiver(LoRa):
 
 lora = RawLoRaReceiver(verbose=False)
 
+# ✅ Nueva función para escribir registros manualmente
+def write_register(address, value):
+    lora.spi.xfer([address | 0x80, value])
+
 # Configuración forzada completa
 print("\U0001F50C Forzando configuración LoRa en SX1278...")
 lora.set_mode(MODE.SLEEP)
 time.sleep(0.1)
-lora.set_freq(915.0)
-lora.set_bw(BW.BW125)
-lora.set_spreading_factor(7)
-lora.set_coding_rate(CODING_RATE.CR4_5)
+lora.set_freq(915.0)                   # 915 MHz
+lora.set_bw(BW.BW125)                   # 125 kHz
+lora.set_spreading_factor(12)           # SF12
+lora.set_coding_rate(CODING_RATE.CR4_8) # 4/8
 lora.set_preamble(8)
 lora.set_rx_crc(True)
-lora.writeRegister(REG.LORA.SYNC_WORD, 0x34)
+
+write_register(REG.LORA.SYNC_WORD, 0x34) # Sync Word 0x34
+
 lora.reset_ptr_rx()
 lora.set_mode(MODE.RXCONT)
 
