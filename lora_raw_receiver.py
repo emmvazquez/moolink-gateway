@@ -22,7 +22,12 @@ lora = RawLoRaReceiver(verbose=False)
 # Configuración básica (igual que el emisor)
 lora.set_mode(MODE.STDBY)
 lora.set_freq(915.0)
-# NOTA: No seteamos "reception strict", queremos leer aunque haya error
+lora.set_bw(BW.BW125)
+lora.set_spreading_factor(7)
+lora.set_coding_rate(CODING_RATE.CR4_5)
+lora.set_preamble(8)
+lora.set_rx_crc(True)
+lora.set_sync_word(0x34)
 
 print("\U0001F4E1 Modo RAW iniciado. Esperando paquetes...")
 
