@@ -46,7 +46,7 @@ try:
             else:
                 print("⚠️ Delimitadores ausentes.")
 
-        time.sleep(0.01)  # ✅ revisión más frecuente
+        time.sleep(0.02)  # ✅ revisión más frecuente
 
 except KeyboardInterrupt:
     lora.set_mode(MODE.SLEEP)
