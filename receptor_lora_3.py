@@ -23,7 +23,7 @@ lora.set_bw(BW.BW125)
 lora.set_coding_rate(CODING_RATE.CR4_5)
 lora.set_preamble(16)            # Preambulo más largo para mejor enganche
 lora.set_sync_word(0x12)
-lora.set_rx_crc(False)           # ✅ CRC desactivado
+lora.set_rx_crc(True)           # ✅ CRC desactivado
 lora.set_mode(MODE.RXCONT)
 
 print("📡 Receptor LoRa v3.1 EXTREMO en marcha...")
