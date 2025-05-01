@@ -1,12 +1,13 @@
-from SX127x.LoRa import LoRa
 from SX127x.board_config import BOARD
+from SX127x.LoRa import LoRa
 from SX127x.constants import MODE, BW, CODING_RATE
 import time
 
-board_config.BOARD.setup = lambda: None
-board_config.BOARD.add_events = lambda *args, **kwargs: None
+# 🔧 Desactivar funciones relacionadas con interrupciones
+BOARD.setup = lambda: None
+BOARD.add_events = lambda *args, **kwargs: None
 
-board_config.BOARD.setup()
+BOARD.setup()
 
 class LoRaReceiver(LoRa):
     def __init__(self, verbose=False):
