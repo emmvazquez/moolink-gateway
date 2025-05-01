@@ -14,7 +14,7 @@ class LoRaReceiver(LoRa):
         self.set_dio_mapping([0]*6)
 
 lora = LoRaReceiver(verbose=False)
-lora.set_freq(915.0)
+lora.set_freq(913.0)
 lora.set_spreading_factor(9)
 lora.set_bw(BW.BW125)
 lora.set_coding_rate(CODING_RATE.CR4_5)
