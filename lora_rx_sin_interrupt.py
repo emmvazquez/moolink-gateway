@@ -3,7 +3,10 @@ from SX127x.board_config import BOARD
 from SX127x.constants import MODE, BW, CODING_RATE
 import time
 
-BOARD.setup()
+board_config.BOARD.setup = lambda: None
+board_config.BOARD.add_events = lambda *args, **kwargs: None
+
+board_config.BOARD.setup()
 
 class LoRaReceiver(LoRa):
     def __init__(self, verbose=False):
