@@ -1,5 +1,6 @@
 from SX127x.LoRa import LoRa
 from SX127x.board_config import BOARD
+from SX127x.constants import MODE
 import time
 
 # Definir directamente la constante del registro de versión
