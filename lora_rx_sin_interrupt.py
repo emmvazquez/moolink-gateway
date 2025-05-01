@@ -50,13 +50,18 @@ try:
             lora.clear_irq_flags(RxDone=1)
             payload = lora.read_payload(nocheck=True)
             print("🧾 Bytes crudos:", payload)
-            mensaje = bytes(payload).decode('utf-8', errors='ignore')
-            print("📥 Texto decodificado:", mensaje)
+
             try:
-                data_json = json.loads(mensaje)
-                print("✅ JSON válido:", data_json)
-            except json.JSONDecodeError:
-                print("❌ Error al decodificar JSON")
+                mensaje = bytes(payload).decode('utf-8')
+                print("📥 Texto decodificado:", mensaje)
+                try:
+                    data_json = json.loads(mensaje)
+                    print("✅ JSON válido:", data_json)
+                except json.JSONDecodeError:
+                    print("⚠️  JSON inválido, pero UTF-8 válido")
+            except UnicodeDecodeError:
+                print("❌ No se pudo decodificar como UTF-8. Datos brutos:", payload)
+
         time.sleep(0.5)
 
 except KeyboardInterrupt:
