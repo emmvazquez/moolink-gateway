@@ -1,19 +1,20 @@
-from SX127x.board_config import BOARD
 from SX127x.LoRa import LoRa
+from SX127x.board_config import BOARD
 from SX127x.constants import MODE, BW, CODING_RATE
 import time
 
-# Desactivar interrupciones (no se usan en este receptor)
+# Anula funciones que no usas (sin interrupciones)
 BOARD.setup = lambda: None
 BOARD.add_events = lambda *args, **kwargs: None
 BOARD.setup()
 
 class LoRaReceiver(LoRa):
     def __init__(self, verbose=False):
-        super(LoRaReceiver, self).__init__(verbose)
+        super().__init__(verbose)
         self.set_mode(MODE.SLEEP)
         self.set_dio_mapping([0]*6)
 
+# Instancia
 lora = LoRaReceiver(verbose=False)
 lora.set_freq(915.0)
 lora.set_spreading_factor(12)
@@ -24,42 +25,28 @@ lora.set_sync_word(0x34)
 lora.set_rx_crc(True)
 lora.set_mode(MODE.RXCONT)
 
-print("📡 Receptor listo en modo RXCONT...")
+print("📡 Receptor LoRa (SX1276) listo para recibir...")
 
 try:
     while True:
         flags = lora.get_irq_flags()
         if flags.get('rx_done'):
             lora.clear_irq_flags(RxDone=1)
-            payload = lora.read_payload(nocheck=True)
-            raw_bytes = bytes(payload)
+            payload = bytes(lora.read_payload(nocheck=True))
 
-            # 🧪 Diagnóstico: ver qué llegó exactamente
-            print("📦 Bytes crudos:", list(raw_bytes))
-            print("📦 Texto crudo:", raw_bytes)
+            print("📦 Bytes crudos:", list(payload))
+            print("📦 Texto crudo:", payload)
 
-            # Validación de delimitadores
-            if raw_bytes.startswith(b'@') and raw_bytes.endswith(b'#'):
-                contenido = raw_bytes[1:-1]  # quitar @ y #
+            if payload.startswith(b'@') and payload.endswith(b'#'):
                 try:
-                    mensaje = contenido.decode('utf-8')
-                    print("✅ Mensaje limpio:", mensaje)
-
-                    partes = mensaje.split(',')
-                    if len(partes) == 11:
-                        print("📊 CSV parseado:", partes)
-                    else:
-                        print(f"⚠️ Campos inesperados ({len(partes)}):", partes)
-
-                except UnicodeDecodeError as e:
-                    print("❌ Error de codificación UTF-8:", e)
+                    msg = payload[1:-1].decode('utf-8')
+                    print("✅ Mensaje recibido:", msg)
                 except Exception as e:
-                    print("⚠️ Error general:", e)
+                    print("⚠️ Error al decodificar:", e)
             else:
                 print("⚠️ Delimitadores ausentes. Ignorado.")
-
-        time.sleep(0.1)
+        time.sleep(0.2)
 
 except KeyboardInterrupt:
-    print("⛔ Interrupción por teclado")
+    print("⛔ Interrumpido por usuario")
     lora.set_mode(MODE.SLEEP)
