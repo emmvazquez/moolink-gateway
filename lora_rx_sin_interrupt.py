@@ -23,6 +23,9 @@ class LoRaReceiver(LoRa):
         self.set_mode(MODE.SLEEP)
         self.set_dio_mapping([0]*6)
 
+    def set_bandwidth(self, bw):
+        self.set_bw(bw)
+
 BOARD.setup()
 
 lora = LoRaReceiver(verbose=False)
