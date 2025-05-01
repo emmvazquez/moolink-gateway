@@ -3,6 +3,7 @@ from SX127x.board_config import BOARD
 from SX127x.constants import MODE, BW, CODING_RATE
 import time
 import RPi.GPIO as GPIO
+import json
 
 # Definir manualmente los factores de propagación (Spreading Factors)
 class SF:
@@ -48,8 +49,14 @@ try:
         if flags.get('rx_done'):
             lora.clear_irq_flags(RxDone=1)
             payload = lora.read_payload(nocheck=True)
+            print("🧾 Bytes crudos:", payload)
             mensaje = bytes(payload).decode('utf-8', errors='ignore')
-            print("📥 Paquete recibido:", mensaje)
+            print("📥 Texto decodificado:", mensaje)
+            try:
+                data_json = json.loads(mensaje)
+                print("✅ JSON válido:", data_json)
+            except json.JSONDecodeError:
+                print("❌ Error al decodificar JSON")
         time.sleep(0.5)
 
 except KeyboardInterrupt:
