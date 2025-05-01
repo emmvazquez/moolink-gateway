@@ -2,20 +2,8 @@ from SX127x.LoRa import LoRa
 from SX127x.board_config import BOARD
 from SX127x.constants import MODE, BW, CODING_RATE
 import time
-import RPi.GPIO as GPIO
 
-# Definir manualmente los factores de propagación (Spreading Factors)
-class SF:
-    SF7 = 7
-    SF8 = 8
-    SF9 = 9
-    SF10 = 10
-    SF11 = 11
-    SF12 = 12
-
-# Anular eventos automáticos antes de iniciar
-BOARD.setup = lambda: None
-BOARD.add_events = lambda *args, **kwargs: None
+BOARD.setup()
 
 class LoRaReceiver(LoRa):
     def __init__(self, verbose=False):
@@ -23,24 +11,17 @@ class LoRaReceiver(LoRa):
         self.set_mode(MODE.SLEEP)
         self.set_dio_mapping([0]*6)
 
-    def set_bandwidth(self, bw):
-        self.set_bw(bw)
-
-BOARD.setup()
-
 lora = LoRaReceiver(verbose=False)
-
-# Configuración LoRa compatible con emisor MooLink
 lora.set_freq(915.0)
-lora.set_spreading_factor(SF.SF12)
+lora.set_spreading_factor(12)
 lora.set_bandwidth(BW.BW125)
 lora.set_coding_rate(CODING_RATE.CR4_8)
 lora.set_preamble(8)
 lora.set_sync_word(0x34)
 lora.set_rx_crc(True)
-
 lora.set_mode(MODE.RXCONT)
-print("📡 Receptor SX1276 en modo RXCONT sin interrupciones...")
+
+print("📡 Receptor listo en modo RXCONT...")
 
 try:
     while True:
@@ -48,35 +29,29 @@ try:
         if flags.get('rx_done'):
             lora.clear_irq_flags(RxDone=1)
             payload = lora.read_payload(nocheck=True)
-            print("📦 Hex:", ' '.join(f'{b:02X}' for b in payload))
-            print("📦 Bytes crudos:", payload)
+            raw_bytes = bytes(payload)
 
             try:
-                mensaje = bytes(payload).decode('utf-8').strip()
-                print("📨 Texto recibido:", mensaje)
+                if raw_bytes.startswith(b'@') and raw_bytes.endswith(b'#\n'):
+                    contenido = raw_bytes[1:-2]  # quitar delimitadores
+                    mensaje = contenido.decode('utf-8')
+                    print("✅ Mensaje limpio:", mensaje)
 
-                # Si se detecta que el mensaje es tipo JSON
-                if mensaje.startswith("{") and mensaje.endswith("}"):
-                    import json
-                    try:
-                        data = json.loads(mensaje)
-                        print("✅ JSON válido:", data)
-                    except json.JSONDecodeError:
-                        print("⚠️ JSON inválido, pero UTF-8 válido")
-                # Si se detecta CSV
-                elif "," in mensaje:
-                    partes = mensaje.split(",")
-                    print("📊 CSV recibido:", partes)
+                    partes = mensaje.split(',')
+                    if len(partes) == 11:
+                        print("📊 CSV parseado:", partes)
+                    else:
+                        print(f"⚠️ Campos inesperados ({len(partes)}):", partes)
                 else:
-                    print("📃 Texto plano recibido:", mensaje)
+                    print("⚠️ Delimitadores ausentes. Ignorado.")
 
-            except UnicodeDecodeError:
-                print("❌ No se pudo decodificar como UTF-8")
+            except UnicodeDecodeError as e:
+                print("❌ Error de decodificación UTF-8:", e)
+            except Exception as e:
+                print("⚠️ Error general:", e)
 
-        time.sleep(0.5)
+        time.sleep(0.1)
 
 except KeyboardInterrupt:
-    print("\n⛔ Interrumpido por el usuario.")
-finally:
+    print("⛔ Interrupción por teclado")
     lora.set_mode(MODE.SLEEP)
-    GPIO.cleanup()
