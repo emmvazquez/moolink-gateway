@@ -3,7 +3,6 @@ from SX127x.board_config import BOARD
 from SX127x.constants import MODE, BW, CODING_RATE
 import time
 import RPi.GPIO as GPIO
-import json
 
 # Definir manualmente los factores de propagación (Spreading Factors)
 class SF:
@@ -31,7 +30,7 @@ BOARD.setup()
 
 lora = LoRaReceiver(verbose=False)
 
-# Configuración LoRa compatible con tu emisor
+# Configuración LoRa compatible con emisor MooLink
 lora.set_freq(915.0)
 lora.set_spreading_factor(SF.SF12)
 lora.set_bandwidth(BW.BW125)
@@ -49,18 +48,29 @@ try:
         if flags.get('rx_done'):
             lora.clear_irq_flags(RxDone=1)
             payload = lora.read_payload(nocheck=True)
-            print("🧾 Bytes crudos:", payload)
+            print("📦 Bytes crudos:", payload)
 
             try:
-                mensaje = bytes(payload).decode('utf-8')
-                print("📥 Texto decodificado:", mensaje)
-                try:
-                    data_json = json.loads(mensaje)
-                    print("✅ JSON válido:", data_json)
-                except json.JSONDecodeError:
-                    print("⚠️  JSON inválido, pero UTF-8 válido")
+                mensaje = bytes(payload).decode('utf-8').strip()
+                print("📨 Texto recibido:", mensaje)
+
+                # Si se detecta que el mensaje es tipo JSON
+                if mensaje.startswith("{") and mensaje.endswith("}"):
+                    import json
+                    try:
+                        data = json.loads(mensaje)
+                        print("✅ JSON válido:", data)
+                    except json.JSONDecodeError:
+                        print("⚠️ JSON inválido, pero UTF-8 válido")
+                # Si se detecta CSV
+                elif "," in mensaje:
+                    partes = mensaje.split(",")
+                    print("📊 CSV recibido:", partes)
+                else:
+                    print("📃 Texto plano recibido:", mensaje)
+
             except UnicodeDecodeError:
-                print("❌ No se pudo decodificar como UTF-8. Datos brutos:", payload)
+                print("❌ No se pudo decodificar como UTF-8")
 
         time.sleep(0.5)
 
