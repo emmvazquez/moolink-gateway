@@ -3,6 +3,7 @@ from SX127x.board_config import BOARD
 from SX127x.constants import MODE, BW, CODING_RATE
 import time
 
+# Setup manual para evitar interrupciones
 BOARD.setup = lambda: None
 BOARD.add_events = lambda *args, **kwargs: None
 BOARD.setup()
@@ -14,7 +15,7 @@ class LoRaReceiver(LoRa):
         self.set_dio_mapping([0]*6)
 
 lora = LoRaReceiver(verbose=False)
-lora.set_freq(913.0)  # ✅ Alternativa a 915.0 MHz
+lora.set_freq(913.0)  # Puedes volver a 915.0 si prefieres
 lora.set_spreading_factor(9)
 lora.set_bw(BW.BW125)
 lora.set_coding_rate(CODING_RATE.CR4_5)
@@ -23,7 +24,7 @@ lora.set_sync_word(0x12)
 lora.set_rx_crc(True)
 lora.set_mode(MODE.RXCONT)
 
-print("📡 Receptor LoRa v3.0 DEBUG activo en 913.0 MHz...")
+print("📡 Receptor LoRa v3.0 DEBUG iniciado...")
 
 ultimo_id = -1
 recibidos = 0
@@ -36,11 +37,17 @@ try:
             lora.clear_irq_flags(RxDone=1)
             payload = bytes(lora.read_payload(nocheck=True))
 
-            # 📊 Depuración completa
+            # 📊 RSSI y SNR por lectura directa de registros
+            raw_rssi = lora.get_register(0x1A)  # RegPktRssiValue
+            raw_snr  = lora.get_register(0x19)  # RegPktSnrValue
+            rssi = -164 + raw_rssi
+            snr  = (raw_snr if raw_snr < 128 else raw_snr - 256) / 4.0
+
+            # 📦 Depuración completa
             print("📦 Bytes crudos:", list(payload))
             print("📦 Texto crudo:", payload)
-            print("📶 RSSI:", lora.get_rssi(), "dBm")
-            print("📈 SNR:", lora.get_pkt_snr())
+            print("📶 RSSI:", rssi, "dBm")
+            print("📈 SNR:", snr, "dB")
 
             if payload.startswith(b'@') and payload.endswith(b'#'):
                 try:
@@ -61,7 +68,7 @@ try:
             else:
                 print("⚠️ Delimitadores ausentes o paquete dañado.")
 
-        time.sleep(0.005)
+        time.sleep(0.01)
 
 except KeyboardInterrupt:
     lora.set_mode(MODE.SLEEP)
