@@ -1,7 +1,16 @@
 from SX127x.LoRa import LoRa
 from SX127x.board_config import BOARD
-from SX127x.constants import MODE, BW, CODING_RATE, SF
+from SX127x.constants import MODE, BW, CODING_RATE
 import time
+
+# Definir manualmente los factores de propagación (Spreading Factors)
+class SF:
+    SF7 = 7
+    SF8 = 8
+    SF9 = 9
+    SF10 = 10
+    SF11 = 11
+    SF12 = 12
 
 class LoRaReceiver(LoRa):
     def __init__(self, verbose=False):
@@ -22,7 +31,7 @@ lora.set_sync_word(0x34)
 lora.set_rx_crc(True)
 
 lora.set_mode(MODE.RXCONT)
-print("📡 Receptor SX1276 en modo RXCONT sin interrupciones...")
+print("\ud83d\udce1 Receptor SX1276 en modo RXCONT sin interrupciones...")
 
 try:
     while True:
@@ -31,11 +40,11 @@ try:
             lora.clear_irq_flags(RxDone=1)
             payload = lora.read_payload(nocheck=True)
             mensaje = bytes(payload).decode('utf-8', errors='ignore')
-            print("📥 Paquete recibido:", mensaje)
+            print("\ud83d\udce5 Paquete recibido:", mensaje)
         time.sleep(0.5)
 
 except KeyboardInterrupt:
-    print("⛔ Interrumpido por el usuario.")
+    print("\n\u26d4 Interrumpido por el usuario.")
 finally:
     lora.set_mode(MODE.SLEEP)
     BOARD.teardown()
