@@ -3,30 +3,27 @@ from SX127x.board_config import BOARD
 from SX127x.constants import MODE, BW, CODING_RATE
 import time
 
-# Desactiva setup automático
 BOARD.setup = lambda: None
 BOARD.add_events = lambda *args, **kwargs: None
 BOARD.setup()
 
-# Definición del receptor
 class LoRaReceiver(LoRa):
     def __init__(self, verbose=False):
         super().__init__(verbose)
         self.set_mode(MODE.SLEEP)
         self.set_dio_mapping([0]*6)
 
-# Inicializa LoRa
 lora = LoRaReceiver(verbose=False)
 lora.set_freq(915.0)
-lora.set_spreading_factor(9)     # SF9, puedes probar SF10/11 si deseas aún más alcance
+lora.set_spreading_factor(9)
 lora.set_bw(BW.BW125)
 lora.set_coding_rate(CODING_RATE.CR4_5)
-lora.set_preamble(16)            # Preambulo más largo para mejor enganche
+lora.set_preamble(12)
 lora.set_sync_word(0x12)
-lora.set_rx_crc(True)           # ✅ CRC desactivado
+lora.set_rx_crc(True)
 lora.set_mode(MODE.RXCONT)
 
-print("📡 Receptor LoRa v3.1 EXTREMO en marcha...")
+print("📡 Receptor LoRa v3.0 escuchando...")
 
 ultimo_id = -1
 recibidos = 0
@@ -57,6 +54,8 @@ try:
                     print("⚠️ Error al decodificar:", e)
             else:
                 print("⚠️ Delimitadores ausentes:", payload)
+
+        time.sleep(0.005)
 
 except KeyboardInterrupt:
     lora.set_mode(MODE.SLEEP)
