@@ -48,6 +48,7 @@ try:
         if flags.get('rx_done'):
             lora.clear_irq_flags(RxDone=1)
             payload = lora.read_payload(nocheck=True)
+            print("📦 Hex:", ' '.join(f'{b:02X}' for b in payload))
             print("📦 Bytes crudos:", payload)
 
             try:
