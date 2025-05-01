@@ -15,15 +15,15 @@ class LoRaReceiver(LoRa):
 
 lora = LoRaReceiver(verbose=False)
 lora.set_freq(915.0)
-lora.set_spreading_factor(7)              # SF7
-lora.set_bw(BW.BW125)                     # 125kHz
-lora.set_coding_rate(CODING_RATE.CR4_5)   # 4/5
+lora.set_spreading_factor(7)
+lora.set_bw(BW.BW125)
+lora.set_coding_rate(CODING_RATE.CR4_5)
 lora.set_preamble(8)
-lora.set_sync_word(0x12)                  # público
+lora.set_sync_word(0x12)
 lora.set_rx_crc(True)
 lora.set_mode(MODE.RXCONT)
 
-print("📡 Receptor LoRa BÁSICO en marcha...")
+print("📡 Receptor v2.8 en marcha...")
 
 try:
     while True:
@@ -31,16 +31,23 @@ try:
         if flags.get('rx_done'):
             lora.clear_irq_flags(RxDone=1)
             payload = bytes(lora.read_payload(nocheck=True))
-            print("📦 Bytes:", list(payload))
             print("📦 Texto:", payload)
 
             if payload.startswith(b'@') and payload.endswith(b'#'):
-                print("✅ Mensaje recibido:", payload[1:-1].decode('utf-8'))
+                try:
+                    contenido = payload[1:-1].decode('utf-8')
+                    partes = contenido.split(",")
+                    if len(partes) == 3:
+                        print(f"✅ Recibido: ID={partes[0]}, Temp={partes[1]}°C, Hum={partes[2]}%")
+                    else:
+                        print("⚠️ Formato inesperado:", contenido)
+                except Exception as e:
+                    print("⚠️ Error al decodificar:", e)
             else:
-                print("⚠️ Delimitadores ausentes o incorrectos.")
+                print("⚠️ Delimitadores ausentes.")
 
         time.sleep(0.02)
 
 except KeyboardInterrupt:
     lora.set_mode(MODE.SLEEP)
-    print("⛔ Interrumpido por teclado.")
+    print("⛔ Interrumpido por usuario.")
