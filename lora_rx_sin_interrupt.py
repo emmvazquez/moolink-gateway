@@ -37,7 +37,7 @@ try:
             print("📦 Bytes crudos:", list(payload))
             print("📦 Texto crudo:", payload)
 
-            if payload.startswith(b'@') :
+            if payload.startswith(b'@') and payload.endswith(b'#'):
                 try:
                     msg = payload[1:-1].decode('utf-8')
                     print("✅ Mensaje recibido:", msg)
