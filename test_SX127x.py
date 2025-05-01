@@ -1,7 +1,9 @@
 from SX127x.LoRa import LoRa
 from SX127x.board_config import BOARD
-from SX127x.constants import REG_VERSION
 import time
+
+# Definir directamente la constante del registro de versión
+REG_VERSION = 0x42
 
 class LoraTester(LoRa):
     def __init__(self, verbose=False):
