@@ -18,7 +18,7 @@ class LoRaReceiver(LoRa):
 lora = LoRaReceiver(verbose=False)
 lora.set_freq(915.0)
 lora.set_spreading_factor(12)
-lora.set_bandwidth(BW.BW125)
+lora.set_bw(BW.BW125)
 lora.set_coding_rate(CODING_RATE.CR4_8)
 lora.set_preamble(8)
 lora.set_sync_word(0x34)
