@@ -2,6 +2,7 @@ from SX127x.LoRa import LoRa
 from SX127x.board_config import BOARD
 from SX127x.constants import MODE, BW, CODING_RATE
 import time
+import RPi.GPIO as GPIO
 
 # Definir manualmente los factores de propagación (Spreading Factors)
 class SF:
@@ -12,6 +13,10 @@ class SF:
     SF11 = 11
     SF12 = 12
 
+# Anular eventos automáticos antes de iniciar
+BOARD.setup = lambda: None
+BOARD.add_events = lambda *args, **kwargs: None
+
 class LoRaReceiver(LoRa):
     def __init__(self, verbose=False):
         super(LoRaReceiver, self).__init__(verbose)
@@ -19,6 +24,7 @@ class LoRaReceiver(LoRa):
         self.set_dio_mapping([0]*6)
 
 BOARD.setup()
+
 lora = LoRaReceiver(verbose=False)
 
 # Configuración LoRa compatible con tu emisor
@@ -31,7 +37,7 @@ lora.set_sync_word(0x34)
 lora.set_rx_crc(True)
 
 lora.set_mode(MODE.RXCONT)
-print("\ud83d\udce1 Receptor SX1276 en modo RXCONT sin interrupciones...")
+print("📡 Receptor SX1276 en modo RXCONT sin interrupciones...")
 
 try:
     while True:
@@ -40,11 +46,11 @@ try:
             lora.clear_irq_flags(RxDone=1)
             payload = lora.read_payload(nocheck=True)
             mensaje = bytes(payload).decode('utf-8', errors='ignore')
-            print("\ud83d\udce5 Paquete recibido:", mensaje)
+            print("📥 Paquete recibido:", mensaje)
         time.sleep(0.5)
 
 except KeyboardInterrupt:
-    print("\n\u26d4 Interrumpido por el usuario.")
+    print("\n⛔ Interrumpido por el usuario.")
 finally:
     lora.set_mode(MODE.SLEEP)
-    BOARD.teardown()
+    GPIO.cleanup()
