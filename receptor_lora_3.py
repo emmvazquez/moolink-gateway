@@ -49,7 +49,7 @@ try:
             print("📦 Paquete recibido:", payload)
             print(f"📶 RSSI: {rssi} dBm | SNR: {snr:.1f} dB\n")
 
-        time.sleep(0.05)
+        time.sleep(0.1)
 
 except KeyboardInterrupt:
     lora.set_mode(MODE.SLEEP)
