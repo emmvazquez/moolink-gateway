@@ -29,6 +29,11 @@ BOARD.ss_pin    = 8      # NSS (CS) - Morado
 BOARD.DIO0      = 7      # DIO0 - Naranja
 
 # 🔧 Asegúrate de configurar DIO0 como entrada ANTES de usar interrupciones
+GPIO.cleanup(BOARD.DIO0)  # Limpia el canal antes de usarlo
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+GPIO.setup(BOARD.DIO0, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(BOARD.DIO0, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)  # Agrega esta línea
 GPIO.setwarnings(False)  # Opcional, para suprimir advertencias
