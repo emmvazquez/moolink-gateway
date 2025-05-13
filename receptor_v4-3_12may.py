@@ -1,9 +1,10 @@
 """
-Proyecto: MooLink - Receptor LoRa + Envío API
+Proyecto: MooLink - Receptor LoRa + Envío a API REST
 Fecha: 12 mayo 2025
-Versión: 4.3
+Versión: 4.4
 Descripción:
-Recibe datos desde ESP32-S3 por LoRa y los envía a la API como JSON.
+Recibe datos desde ESP32-S3 por LoRa en formato @i,temp,hum,lat,lon,bpm,ax,ay,az,gx,gy,gz#
+y los envía como JSON a la API REST de MooLink.
 """
 
 from SX127x.LoRa import LoRa
@@ -11,11 +12,12 @@ from SX127x.board_config import BOARD
 from SX127x.constants import MODE, BW, CODING_RATE
 import time
 import requests
+import json
 
 # === Configuración API ===
 API_URL = "https://moolink.e-icus.net/api/localizacion"
 
-# Desactivar conflictos en setup
+# === Inicialización segura del board SX1278 ===
 BOARD.setup = lambda: None
 BOARD.add_events = lambda *args, **kwargs: None
 BOARD.setup()
@@ -33,15 +35,15 @@ def enviar_a_api(datos):
         if response.status_code == 201:
             print("✅ Datos enviados a la API")
         else:
-            print("⚠️ Error al enviar a API:", response.status_code, response.text)
+            print(f"⚠️ API respondió con error {response.status_code}:\n{response.text}")
     except Exception as e:
-        print("❌ Error de conexión API:", e)
+        print("❌ Error al conectar con la API:", e)
 
 def convertir_a_json(payload_str):
     try:
         campos = payload_str.split(',')
         if len(campos) != 12:
-            print("⚠️ Formato inesperado, campos:", len(campos))
+            print(f"⚠️ Formato inesperado, se esperaban 13 campos, recibidos: {len(campos)}")
             return None
 
         return {
@@ -58,11 +60,12 @@ def convertir_a_json(payload_str):
             "gy": float(campos[10]),
             "gz": float(campos[11])
         }
+
     except Exception as e:
-        print("❌ Error al convertir mensaje:", e)
+        print("❌ Error al procesar el mensaje LoRa:", e)
         return None
 
-# === Inicializar LoRa ===
+# === Configuración LoRa SX1278 ===
 lora = LoRaReceiver()
 lora.set_freq(915.0)
 lora.set_spreading_factor(7)
@@ -73,8 +76,9 @@ lora.set_sync_word(0x12)
 lora.set_rx_crc(True)
 lora.set_mode(MODE.RXCONT)
 
-print("📡 Receptor LoRa + Envío API listo...\n")
+print("📡 Receptor LoRa + API MooLink iniciado correctamente...\n")
 
+# === Bucle principal ===
 try:
     while True:
         flags = lora.get_irq_flags()
@@ -89,12 +93,13 @@ try:
 
                 datos = convertir_a_json(payload_str)
                 if datos:
+                    print("📤 Enviando JSON:", json.dumps(datos))
                     enviar_a_api(datos)
             else:
-                print("⚠️ Delimitadores no válidos")
+                print("⚠️ Delimitadores ausentes (@...#)")
 
         time.sleep(0.1)
 
 except KeyboardInterrupt:
     lora.set_mode(MODE.SLEEP)
-    print("\n⛔ Programa interrumpido")
+    print("\n🛑 Recepción detenida manualmente")
