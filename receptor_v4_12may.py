@@ -40,6 +40,8 @@ print("📡 Receptor LoRa listo. Esperando mensajes...\n")
 try:
     while True:
         flags = lora.get_irq_flags()
+        print("⏳ Esperando... Flags actuales:", lora.get_irq_flags())
+
         if flags.get('rx_done'):
             lora.clear_irq_flags(RxDone=1)
             payload = bytes(lora.read_payload(nocheck=True))
