@@ -28,7 +28,8 @@ class LoRaReceiver(LoRa):
 
 def enviar_a_api(datos):
     try:
-        response = requests.post(API_URL, json=datos, timeout=5)
+        headers = {'Content-Type': 'application/json; charset=utf-8'}
+        response = requests.post(API_URL, json=datos, headers=headers, timeout=5)
         if response.status_code == 201:
             print("✅ Datos enviados a la API")
         else:
