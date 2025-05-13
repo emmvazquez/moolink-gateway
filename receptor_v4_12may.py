@@ -1,75 +1,59 @@
 """
-Proyecto: MooLink - Receptor LoRa punto a punto
+Proyecto: MooLink - Receptor LoRa punto a punto (sin interrupciones)
 Fecha: 12 de mayo de 2025
 Versión: 4.0
 Descripción:
-Este script recibe datos LoRa desde un ESP32-S3 (con SX1262 integrado).
-El receptor está montado en una Raspberry Pi y usa un módulo SX1278 con las siguientes conexiones:
-
-Cableado SX1278 ↔ Raspberry Pi:
-- VCC  → 3.3V       (Rojo)
-- GND  → GND        (Negro)
-- MOSI → GPIO 10    (Verde)
-- MISO → GPIO 9     (Amarillo)
-- SCK  → GPIO 11    (Azul)
-- NSS  → GPIO 8     (Morado)
-- RESET→ GPIO 25    (Blanco)
-- DIO0 → GPIO 7     (Naranja)
+Este script reemplaza el uso de interrupciones DIO0 por lectura activa
+(polling de flags). Compatible con ESP32-S3 con LoRa SX1262.
+Evita conflictos de GPIO. Compatible con módulos SX1278.
 """
-import RPi.GPIO as GPIO
+
 from SX127x.LoRa import LoRa
 from SX127x.board_config import BOARD
-from SX127x.constants import MODE
+from SX127x.constants import MODE, BW, CODING_RATE
 import time
 
-# Configurar pines según tu cableado
+# ⚠️ Sobrescribimos funciones que causan conflictos de GPIO
+BOARD.setup = lambda: None
+BOARD.add_events = lambda *args, **kwargs: None
 BOARD.setup()
-BOARD.reset_pin = 25     # RESET - Blanco
-BOARD.ss_pin    = 8      # NSS (CS) - Morado
-BOARD.DIO0      = 7      # DIO0 - Naranja
-
-# 🔧 Asegúrate de configurar DIO0 como entrada ANTES de usar interrupciones
-GPIO.cleanup(BOARD.DIO0)  # Limpia el canal antes de usarlo
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
-GPIO.setup(BOARD.DIO0, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(BOARD.DIO0, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)  # Agrega esta línea
-GPIO.setwarnings(False)  # Opcional, para suprimir advertencias
 
 class LoRaReceiver(LoRa):
-    def __init__(self):
-        super(LoRaReceiver, self).__init__()
+    def __init__(self, verbose=False):
+        super().__init__(verbose)
         self.set_mode(MODE.SLEEP)
+        self.set_dio_mapping([0]*6)
 
-        self.set_freq(915.0)
-        self.set_spreading_factor(7)
-        self.set_bw(7)
-        self.set_coding_rate(1)
-        self.set_preamble(8)
-        self.set_sync_word(0x12)
-        self.enable_crc()
-
-        self.set_mode(MODE.RXCONT)
-
-    def on_rx_done(self):
-        print("📥 Paquete recibido:")
-        payload = bytes(self.read_payload(nocheck=True)).decode('utf-8', errors='ignore')
-        print(f"📦 Datos: {payload}")
-        print(f"🔊 RSSI: {self.packet_rssi()}, SNR: {self.packet_snr():.2f} dB\n")
-        self.set_mode(MODE.RXCONT)
-
-# Iniciar recepción
-lora = LoRaReceiver()
+# 🛠 Configuración de radio (debe coincidir con el emisor)
+lora = LoRaReceiver(verbose=False)
+lora.set_freq(915.0)
+lora.set_spreading_factor(7)
+lora.set_bw(BW.BW125)
+lora.set_coding_rate(CODING_RATE.CR4_5)
+lora.set_preamble(8)
+lora.set_sync_word(0x12)
+lora.set_rx_crc(True)
 lora.set_mode(MODE.RXCONT)
+
+print("📡 Receptor LoRa BÁSICO en marcha...")
 
 try:
     while True:
-        if lora.received_packet:
-            lora.on_rx_done()
+        flags = lora.get_irq_flags()
+        if flags.get('rx_done'):
+            lora.clear_irq_flags(RxDone=1)
+            payload = bytes(lora.read_payload(nocheck=True))
+            print("📦 Bytes:", list(payload))
+            print("📦 Texto:", payload)
+
+            if payload.startswith(b'@') and payload.endswith(b'#'):
+                mensaje = payload[1:-1].decode('utf-8', errors='ignore')
+                print("✅ Mensaje recibido:", mensaje)
+            else:
+                print("⚠️ Delimitadores ausentes o incorrectos.")
+
         time.sleep(0.1)
 
 except KeyboardInterrupt:
-    print("⛔ Terminando...")
-    BOARD.teardown()
+    lora.set_mode(MODE.SLEEP)
+    print("⛔ Interrumpido por teclado.")
