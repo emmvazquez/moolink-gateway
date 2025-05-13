@@ -16,35 +16,37 @@ Cableado SX1278 ↔ Raspberry Pi:
 - RESET→ GPIO 25    (Blanco)
 - DIO0 → GPIO 7     (Naranja)
 """
-
+import RPi.GPIO as GPIO
 from SX127x.LoRa import LoRa
 from SX127x.board_config import BOARD
 from SX127x.constants import MODE
 import time
-import RPi.GPIO as GPIO
-GPIO.cleanup()
 
-
-# Configurar pines según el cableado físico
+# Configurar pines según tu cableado
 BOARD.setup()
 BOARD.reset_pin = 25     # RESET - Blanco
 BOARD.ss_pin    = 8      # NSS (CS) - Morado
 BOARD.DIO0      = 7      # DIO0 - Naranja
+
+# 🔧 Asegúrate de configurar DIO0 como entrada ANTES de usar interrupciones
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(BOARD.DIO0, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)  # Agrega esta línea
+GPIO.setwarnings(False)  # Opcional, para suprimir advertencias
 
 class LoRaReceiver(LoRa):
     def __init__(self):
         super(LoRaReceiver, self).__init__()
         self.set_mode(MODE.SLEEP)
 
-        self.set_freq(915.0)               # Ajustar según la frecuencia usada por el emisor
-        self.set_spreading_factor(7)       # SF7
-        self.set_bw(7)                     # 125 kHz
-        self.set_coding_rate(1)            # 4/5
-        self.set_preamble(8)               # 8 símbolos
-        self.set_sync_word(0x12)           # Debe coincidir con el emisor
-        self.enable_crc()                  # Activar CRC
+        self.set_freq(915.0)
+        self.set_spreading_factor(7)
+        self.set_bw(7)
+        self.set_coding_rate(1)
+        self.set_preamble(8)
+        self.set_sync_word(0x12)
+        self.enable_crc()
 
-        self.set_mode(MODE.RXCONT)         # Modo recepción continua
+        self.set_mode(MODE.RXCONT)
 
     def on_rx_done(self):
         print("📥 Paquete recibido:")
@@ -53,7 +55,7 @@ class LoRaReceiver(LoRa):
         print(f"🔊 RSSI: {self.packet_rssi()}, SNR: {self.packet_snr():.2f} dB\n")
         self.set_mode(MODE.RXCONT)
 
-# Instanciar y ejecutar
+# Iniciar recepción
 lora = LoRaReceiver()
 lora.set_mode(MODE.RXCONT)
 
@@ -64,5 +66,5 @@ try:
         time.sleep(0.1)
 
 except KeyboardInterrupt:
-    print("⛔ Terminando recepción...")
+    print("⛔ Terminando...")
     BOARD.teardown()
