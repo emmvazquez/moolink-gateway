@@ -39,7 +39,7 @@ def enviar_a_api(datos):
 def convertir_a_json(payload_str):
     try:
         campos = payload_str.split(',')
-        if len(campos) != 13:
+        if len(campos) != 12:
             print("⚠️ Formato inesperado, campos:", len(campos))
             return None
 
